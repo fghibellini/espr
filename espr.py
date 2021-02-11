@@ -29,18 +29,20 @@ def parse_stdin(data):
 def tree_to_list(head):
     # simple stack based dfs to create a
     # printable list, nothing fancy
-    stack = [(head, 0)]
+    stack = [(head, 0, None)]
     nodes = []
 
     while stack:
         cur = stack.pop()
         node = cur[0]
         depth = cur[1]
+        parent_duration = cur[2]
 
         # extract attributes along with
         # depth attribute
         processed_node = {
             'depth': depth,
+            'parent_duration': parent_duration
         }
         processed_node.update(node)
         nodes.append(processed_node)
@@ -48,7 +50,7 @@ def tree_to_list(head):
         children = node.get('children')
         if children:
             for c in children:
-                stack.append((c, depth+1))
+                stack.append((c, depth+1, node.get('time_in_nanos')))
 
     return nodes
 
@@ -56,11 +58,16 @@ def tree_to_list(head):
 def print_node(node, verbose=False):
     INDENT = '   '
     depth = node.get('depth', 0)
+    parent_duration = node.get('parent_duration', 0)
 
-    print('{}> {} {} ms'.format(
+    dur = int(node.get('time_in_nanos'))/1000
+
+    print('{}> {} ms ({} %) {}'.format(
         depth*INDENT,
-        node.get('type'),
-        int(node.get('time_in_nanos'))/1000
+        dur,
+        int(node.get('time_in_nanos') * 100.0 / parent_duration) if parent_duration != None else 100 ,
+        # node.get('type'),
+        node.get('description')
     ))
 
     # optional breakdown
